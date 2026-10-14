@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Pra-proses Teks{% endblock %}
+{% block content %}
+<section class="hero small">
+  <p class="eyebrow">Fitur pra-proses</p>
+  <h1 class="h1s">Pipeline pra-proses teks</h1>
+  <p class="lead">Masukkan kalimat apa pun untuk melihat hasil setiap tahap, dari teks mentah hingga term yang siap diindeks.</p>
+  <form class="searchbox" method="post" action="{{ url_for('pipeline') }}">
+    <input type="text" name="teks" value="{{ teks }}" aria-label="Teks" required>
+    <button type="submit">Proses</button>
+  </form>
+</section>
+
+<section class="pipe">
+  <div class="stage"><span class="n">0</span><div><h3>Teks asli</h3><p class="mono">{{ trace.asli }}</p></div></div>
+  <div class="stage"><span class="n">1</span><div><h3>Case folding</h3><p class="mono">{{ trace.case_folding }}</p></div></div>
+  <div class="stage"><span class="n">2</span><div><h3>Cleaning</h3><p class="muted small">Membuang angka dan tanda baca.</p><p class="mono">{{ trace.cleaning }}</p></div></div>
+  <div class="stage"><span class="n">3</span><div><h3>Tokenizing</h3>
+    <div class="chips">{% for t in trace.tokenizing %}<span class="chip static">{{ t }}</span>{% endfor %}</div></div></div>
+  <div class="stage"><span class="n">4</span><div><h3>Stopword removal</h3>
+    <div class="chips">{% for t in trace.stopword_removal %}<span class="chip static">{{ t }}</span>{% endfor %}</div>
+    {% if trace.stopword_terbuang %}<p class="muted small">Terbuang: {{ trace.stopword_terbuang | join(', ') }}</p>{% endif %}</div></div>
+  <div class="stage last"><span class="n">5</span><div><h3>Stemming <small>(term akhir)</small></h3>
+    <div class="chips">{% for t in trace.stemming %}<span class="chip static strong">{{ t }}</span>{% endfor %}</div>
+    {% if trace.perubahan_stem %}
+      <p class="muted small">Perubahan: {% for a, b in trace.perubahan_stem %}<code>{{ a }}</code> &rarr; <code>{{ b }}</code>{{ ', ' if not loop.last }}{% endfor %}</p>
+    {% endif %}
+    <a class="link" href="{{ url_for('search', q=teks) }}">Gunakan teks ini sebagai kueri &rarr;</a></div></div>
+</section>
+{% endblock %}

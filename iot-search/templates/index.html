@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Beranda{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Sistem Temu Kembali Informasi</p>
+  <h1>Cari pengetahuan tentang <em>Internet of Things</em></h1>
+  <p class="lead">Mesin pencari berbasis Vector Space Model. Dokumen diindeks, dibobot dengan TF-IDF, lalu diurutkan otomatis menurut kemiripan kosinus terhadap kueri Anda.</p>
+
+  <form class="searchbox" action="{{ url_for('search') }}" method="get" role="search">
+    <input type="search" name="q" placeholder="Ketik kata kunci, mis. pemantauan kelembaban tanah" autofocus required aria-label="Kata kunci">
+    <select name="kategori" aria-label="Kategori">
+      <option value="">Semua kategori</option>
+      {% for k in kategori %}<option value="{{ k }}">{{ k }}</option>{% endfor %}
+    </select>
+    <button type="submit">Cari</button>
+  </form>
+
+  <div class="chips">
+    <span class="chips-label">Coba:</span>
+    {% for c in contoh %}
+      <a class="chip" href="{{ url_for('search', q=c) }}">{{ c }}</a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="stats" aria-label="Statistik indeks">
+  <div class="stat"><b>{{ stat.jumlah_dokumen }}</b><span>dokumen</span></div>
+  <div class="stat"><b>{{ stat.jumlah_term }}</b><span>term unik (kosakata)</span></div>
+  <div class="stat"><b>{{ '{:,}'.format(stat.total_token).replace(',', '.') }}</b><span>total token terindeks</span></div>
+  <div class="stat"><b>{{ stat.jumlah_kategori }}</b><span>kategori</span></div>
+  <div class="stat"><b>{{ stat.waktu_indeksasi_ms }} ms</b><span>waktu indeksasi</span></div>
+</section>
+
+<section class="grid2">
+  <div class="card">
+    <h2>Cara kerja mesin pencari</h2>
+    <ol class="steps">
+      <li><b>Pra-proses</b> case folding, cleaning, tokenizing, stopword removal, stemming.</li>
+      <li><b>Indeksasi</b> membangun inverted index: term &rarr; dokumen beserta frekuensinya.</li>
+      <li><b>Pembobotan</b> <code>w = (1 + log₁₀ tf) × log₁₀(N / df)</code></li>
+      <li><b>Perangkingan</b> <code>cos(q, d) = (q·d) / (|q| |d|)</code></li>
+    </ol>
+    <a class="link" href="{{ url_for('pipeline') }}">Coba pipeline pra-proses secara interaktif &rarr;</a>
+  </div>
+  <div class="card">
+    <h2>Term paling sering muncul</h2>
+    <p class="muted">Jumlah dokumen yang memuat term (df), setelah stemming.</p>
+    <div class="chips">
+      {% for t, df in populer %}
+        <a class="chip" href="{{ url_for('search', q=t) }}">{{ t }} <small>{{ df }}</small></a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

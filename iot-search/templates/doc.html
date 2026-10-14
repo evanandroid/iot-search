@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ info.dokumen.judul }}{% endblock %}
+{% block content %}
+<div class="layout">
+  <article class="card docview">
+    <p class="eyebrow">Dokumen #{{ info.dokumen.id }} &middot; {{ info.dokumen.kategori }}</p>
+    <h1 class="h1s">{{ info.dokumen.judul }}</h1>
+    <p class="doctext">{{ isi }}</p>
+    <p>
+      {% if q %}<a class="link" href="{{ url_for('search', q=q) }}">&larr; Kembali ke hasil &ldquo;{{ q }}&rdquo;</a>
+      {% else %}<a class="link" href="{{ url_for('index') }}">&larr; Beranda</a>{% endif %}
+    </p>
+  </article>
+
+  <aside class="side">
+    <div class="card">
+      <h2>Bobot TF-IDF dokumen</h2>
+      <p class="muted">15 term berbobot tertinggi dari {{ info.jumlah_term }} term. |d| = {{ info.norm | fmt(4) }}</p>
+      <table class="mini">
+        <thead><tr><th>Term</th><th>tf</th><th>df</th><th>idf</th><th>w</th></tr></thead>
+        <tbody>
+          {% for t in info.term_teratas %}
+          <tr><td>{{ t.term }}</td><td>{{ t.tf }}</td><td>{{ t.df }}</td><td>{{ t.idf | fmt(3) }}</td><td>{{ t.w | fmt(3) }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </aside>
+</div>
+{% endblock %}

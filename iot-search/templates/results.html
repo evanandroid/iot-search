@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ q or 'Hasil' }}{% endblock %}
+{% block content %}
+<section class="resbar">
+  <form class="searchbox compact" action="{{ url_for('search') }}" method="get" role="search">
+    <input type="search" name="q" value="{{ q }}" placeholder="Kata kunci..." aria-label="Kata kunci" required>
+    <select name="kategori" aria-label="Kategori">
+      <option value="">Semua kategori</option>
+      {% for k in kategori_list %}<option value="{{ k }}" {{ 'selected' if k == kategori }}>{{ k }}</option>{% endfor %}
+    </select>
+    <button type="submit">Cari</button>
+  </form>
+</section>
+
+{% if kosong %}
+  <div class="empty"><h2>Masukkan kata kunci</h2><p>Ketik kueri pada kotak pencarian di atas.</p></div>
+{% else %}
+<div class="layout">
+  <div class="results">
+    <p class="meta">
+      <b>{{ total }}</b> dokumen relevan{% if kategori %} dalam kategori <b>{{ kategori }}</b>{% endif %}
+      &middot; {{ waktu_ms }} ms &middot; halaman {{ halaman }} dari {{ jumlah_halaman }}
+    </p>
+
+    {% if total == 0 %}
+      <div class="empty">
+        <h2>Tidak ada dokumen yang cocok</h2>
+        <p>Tidak ada term kueri yang dikenal indeks atau tidak ada dokumen dengan bobot di atas nol. Coba kata kunci lain atau hapus filter kategori.</p>
+      </div>
+    {% endif %}
+
+    {% for h in hasil %}
+    <article class="result">
+      <div class="rank">{{ mulai + loop.index }}</div>
+      <div class="body">
+        <h3><a href="{{ url_for('dokumen', did=h.id, q=q) }}">{{ h.judul }}</a></h3>
+        <div class="tags">
+          <span class="tag">{{ h.kategori }}</span>
+          <span class="tag ghost">Dok #{{ h.id }}</span>
+          {% for t in h.term_cocok %}<span class="tag term">{{ t }}</span>{% endfor %}
+        </div>
+        <p class="snippet">{{ h.cuplikan }}</p>
+        <div class="score">
+          <div class="bar"><span style="width: {{ (h.skor / skor_maks * 100) | round(1) }}%"></span></div>
+          <span class="val">cosine = {{ h.skor | fmt(4) }}</span>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+
+    {% if jumlah_halaman > 1 %}
+    <nav class="pager" aria-label="Halaman">
+      {% if halaman > 1 %}<a href="{{ url_for('search', q=q, kategori=kategori, page=halaman-1) }}">&larr; Sebelumnya</a>{% endif %}
+      {% set awal = [1, halaman - 2] | max %}{% set akhir = [jumlah_halaman, halaman + 2] | min %}
+      {% for p in range(awal, akhir + 1) %}
+        <a href="{{ url_for('search', q=q, kategori=kategori, page=p) }}" class="{{ 'cur' if p == halaman }}">{{ p }}</a>
+      {% endfor %}
+      {% if halaman < jumlah_halaman %}<a href="{{ url_for('search', q=q, kategori=kategori, page=halaman+1) }}">Berikutnya &rarr;</a>{% endif %}
+    </nav>
+    {% endif %}
+  </div>
+
+  <aside class="side">
+    <div class="card">
+      <h2>Vektor kueri</h2>
+      <p class="muted">Kueri setelah pra-proses, dengan bobot TF-IDF.</p>
+      <table class="mini">
+        <thead><tr><th>Term</th><th>tf</th><th>df</th><th>idf</th><th>w</th></tr></thead>
+        <tbody>
+          {% for d in vektor.detail %}
+          <tr class="{{ '' if d.dikenal else 'off' }}">
+            <td>{{ d.term }}</td><td>{{ d.tf }}</td><td>{{ d.df }}</td>
+            <td>{{ d.idf | fmt(3) }}</td><td>{{ d.w | fmt(3) }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="muted">Seluruh kata terbuang sebagai stopword.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="muted small">|q| = {{ norm_kueri | fmt(4) }}{% if vektor.detail | rejectattr('dikenal') | list %} &middot; baris redup = term tidak ada di indeks{% endif %}</p>
+      <a class="link" href="{{ url_for('pipeline', teks=q) }}">Lihat tahapan pra-proses &rarr;</a>
+    </div>
+  </aside>
+</div>
+{% endif %}
+{% endblock %}
